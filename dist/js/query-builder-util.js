@@ -510,7 +510,7 @@
 					// 		 'id="'+group.id+'_cbx" name="'+group.id+'_data_cbx" '+(enabled == true ? 'checked="checked"' : '') +' ></input>');
 
 					// $('#'+group.id+'_cbx')
-					input.change({ group: group }, function (parameters, extra) {
+					input.on('change switch-change', { group: group }, function (parameters, extra) {
 						var pgroup = parameters.data.group;
 
 						var value = this.checked;
@@ -519,9 +519,22 @@
 						if(value != oldValue){
 							pgroup.data['enabled'] = value;
 							if (!extra) {
-								pgroup.$el.find(" input.toggleswitch:checkbox[id!='" + pgroup.id + "_cbx']")
+								var children = pgroup.$el.find(" input.toggleswitch:checkbox[id!='" + pgroup.id + "_cbx']");
+								
+								children.each(function(i) {
+									var childToggle = $(this).data('bs.toggle');
+									if (value) {
+										childToggle.on(true);
+									} else {
+										childToggle.off(true);
+									}
+									$(this).trigger("switch-change", { group: pgroup });
+								});
+								
+								/* pgroup.$el.find(" input.toggleswitch:checkbox[id!='" + pgroup.id + "_cbx']")
 									.prop('checked', value)
 									.trigger("change", { group: pgroup });
+									*/
 								// $("#" + pgroup.id + " input:checkbox[id!='" + pgroup.id + "_cbx']").prop('checked', value);
 								// //$("#"+pgroup.id +" input:checkbox[id!='"+pgroup.id+"_cbx']").change();
 								// $("#" + pgroup.id + " input:checkbox[id!='" + pgroup.id + "_cbx']").trigger("change", { group: pgroup });
@@ -541,9 +554,20 @@
 								var oldGroupValue = parentGroup.data['enabled'];
 								if(oldGroupValue!==groupOn){
 									// parentGroup.data['enabled'] = groupOn;
+									var parent = parentGroup.$el.find("#" + parentGroup.id + '_cbx');
+									var parenttoggle = parent.data('bs.toggle');
+									if (groupOn) {
+										parenttoggle.on(true);
+									} else {
+										parenttoggle.off(true);
+									}
+									parent.trigger("switch-change", { group: pgroup , propagateToParent:true });
+									
+									/*
 									parentGroup.$el.find("#" + parentGroup.id + '_cbx')
 										.prop('checked', groupOn)
 										.trigger("change", { group: pgroup, propagateToParent:true });
+									*/
 									// $("#" + pgroup.id + '_cbx').prop('checked', value);
 									// $("#" + pgroup.id + '_cbx').trigger("change", { rule: rule });
 								}
@@ -638,7 +662,16 @@
 					// $(".toggleswitch").bootstrapToggle({size: "mini"});
 					// container.find('.toggleswitch').bootstrapToggle({size: "mini"});
 					input.bootstrapToggle({ size: "mini" });
-					input.change({ rule: rule }, function (parameters, extra) {
+					
+					/** definisco una funzione on ('switch-change') che verrà sempre invocata con extra dal processo, 
+					 * mentre la on('change') sarà invocata solo quando ci clicco sopra direttamente e senza extra.
+					 * 
+					 * per modificare lo stato degli altri switch uso la toggle.on(true) o toggle.off(true) e non il trigger della 'change', 
+					 * poi invoco la trigger della switch-change per fare la ricorsione
+					 * 
+					 */ 
+					
+					input.on('change switch-change', { rule: rule }, function (parameters, extra) {
 						var prule = parameters.data.rule;
 
 						var value = this.checked;
@@ -684,9 +717,18 @@
 								var oldGroupValue = pgroup.data['enabled'];
 								if(oldGroupValue!==groupOn){
 									// pgroup.data['enabled'] = groupOn;
-									pgroup.$el.find("#" + pgroup.id + '_cbx')
+									var parent = pgroup.$el.find("#" + pgroup.id + '_cbx');
+									var parenttoggle = parent.data('bs.toggle');
+									if (groupOn) {
+										parenttoggle.on(true);
+									} else {
+										parenttoggle.off(true);
+									}
+									parent.trigger("switch-change", { rule: rule , propagateToParent:true });
+									/*pgroup.$el.find("#" + pgroup.id + '_cbx')
 										.prop('checked', groupOn)
 										.trigger("change", { rule: rule , propagateToParent:true });
+									*/
 									// $("#" + pgroup.id + '_cbx').prop('checked', value);
 									// $("#" + pgroup.id + '_cbx').trigger("change", { rule: rule });
 								}
