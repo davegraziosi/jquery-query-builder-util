@@ -245,6 +245,7 @@
 						selects.removeAttr("multiple");
 						if (val && angular.isArray(val)) {
 							selects.val(val[0]);
+							selects.change();
 						}
 					}
 				}
@@ -254,6 +255,7 @@
 						$(selects).attr("multiple", "");
 						if (val && !angular.isArray(val)) {
 							selects.val([val]);
+							selects.change();
 						}
 					}
 				}
