@@ -467,7 +467,9 @@
 					toolbarPlacement: 'top',
 					locale: 'it',
 					sideBySide: true,
-					keepInvalid: true
+					keepInvalid: true,
+					widgetPositioning: {'vertical': 'bottom', 'horizontal': 'right'},
+					debug: true
 				});
 
 				// $(".toggleswitch").bootstrapToggle({size: "mini"});
