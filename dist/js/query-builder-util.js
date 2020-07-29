@@ -468,7 +468,7 @@
 					locale: 'it',
 					sideBySide: true,
 					keepInvalid: true,
-					widgetPositioning: {'vertical': 'bottom', 'horizontal': 'right'},
+					widgetPositioning: {'vertical': 'bottom', 'horizontal': 'auto'},
 					debug: true
 				});
 
