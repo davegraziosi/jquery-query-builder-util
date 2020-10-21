@@ -109,6 +109,161 @@
 					// if (rules.data) this.queryBuilder('setRules', rules.data);
 					return result;
 				}
+				,
+				
+				/** custom functions addFilter_, removeFilter_, setFilters_, createRuleFilters_ : 
+				 * are equivalent to standard addFilter, removeFilter etc 
+				 * but add 'noevent' boolean parameter
+				**/
+				addFilter_: function(noevent, newFilters, position) {
+			        if (position === undefined || position == '#end') {
+			            position = this.filters.length;
+			        }
+			        else if (position == '#start') {
+			            position = 0;
+			        }
+
+			        if (!$.isArray(newFilters)) {
+			            newFilters = [newFilters];
+			        }
+
+			        var filters = $.extend(true, [], this.filters);
+
+			        // numeric position
+			        if (parseInt(position) == position) {
+			            Array.prototype.splice.apply(filters, [position, 0].concat(newFilters));
+			        }
+			        else {
+			            // after filter by its id
+			            if (this.filters.some(function(filter, index) {
+			                    if (filter.id == position) {
+			                        position = index + 1;
+			                        return true;
+			                    }
+			                })
+			            ) {
+			                Array.prototype.splice.apply(filters, [position, 0].concat(newFilters));
+			            }
+			            // defaults to end of list
+			            else {
+			                Array.prototype.push.apply(filters, newFilters);
+			            }
+			        }
+
+			        this.setFilters_(false, filters, noevent);
+			    },
+			    removeFilter_: function(filterIds, deleteOrphans, noevent) {
+			        var filters = $.extend(true, [], this.filters);
+			        if (typeof filterIds === 'string') {
+			            filterIds = [filterIds];
+			        }
+
+			        filters = filters.filter(function(filter) {
+			            return filterIds.indexOf(filter.id) === -1;
+			        });
+
+			        this.setFilters_(deleteOrphans, filters, noevent);
+			    },
+				setFilters_: function(deleteOrphans, filters, noevent) {
+					var self = this;
+
+			        if (filters === undefined) {
+			            filters = deleteOrphans;
+			            deleteOrphans = false;
+			        }
+
+			        filters = this.checkFilters(filters);
+
+			        /**
+			         * Modifies the filters before {@link module:plugins.ChangeFilters.setFilters} method
+			         * @event changer:setFilters
+			         * @memberof module:plugins.ChangeFilters
+			         * @param {QueryBuilder.Filter[]} filters
+			         * @returns {QueryBuilder.Filter[]}
+			         */
+			        filters = this.change('setFilters', filters);
+
+			        var filtersIds = filters.map(function(filter) {
+			            return filter.id;
+			        });
+
+			        // check for orphans
+			        if (!deleteOrphans) {
+			            (function checkOrphans(node) {
+			                node.each(
+			                    function(rule) {
+			                        if (rule.filter && filtersIds.indexOf(rule.filter.id) === -1) {
+			                            Utils.error('ChangeFilter', 'A rule is using filter "{0}"', rule.filter.id);
+			                        }
+			                    },
+			                    checkOrphans
+			                );
+			            }(this.model.root));
+			        }
+
+			        // replace filters
+			        this.filters = filters;
+
+			        // apply on existing DOM
+			        (function updateBuilder(node) {
+			            node.each(true,
+			                function(rule) {
+			                    if (rule.filter && filtersIds.indexOf(rule.filter.id) === -1) {
+			                        rule.drop();
+
+			                        self.trigger('rulesChanged');
+			                    }
+			                    else {
+			                        self.createRuleFilters_(rule, noevent);
+
+			                        rule.$el.find(/*QueryBuilder.selectors.rule_filter*/'.rule-filter-container [name$=_filter]').val(rule.filter ? rule.filter.id : '-1');
+			                        self.trigger('afterUpdateRuleFilter', rule);
+			                    }
+			                },
+			                updateBuilder
+			            );
+			        }(this.model.root));
+
+			        // update plugins
+			        if (this.settings.plugins) {
+			            if (this.settings.plugins['unique-filter']) {
+			                this.updateDisabledFilters();
+			            }
+			            if (this.settings.plugins['bt-selectpicker']) {
+			                this.$el.find(/*QueryBuilder.selectors.rule_filter*/'.rule-filter-container [name$=_filter]').selectpicker('render');
+			            }
+			        }
+
+			        // reset the default_filter if does not exist anymore
+			        if (this.settings.default_filter) {
+			            try {
+			                this.getFilterById(this.settings.default_filter);
+			            }
+			            catch (e) {
+			                this.settings.default_filter = null;
+			            }
+			        }
+
+			        /**
+			         * After {@link module:plugins.ChangeFilters.setFilters} method
+			         * @event afterSetFilters
+			         * @memberof module:plugins.ChangeFilters
+			         * @param {QueryBuilder.Filter[]} filters
+			         */
+			        this.trigger('afterSetFilters', filters);
+				},
+				
+				createRuleFilters_ : function(rule, noevent) {
+					//QueryBuilder.prototype.createRuleFilters = function(rule) {
+				    var filters = this.change('getRuleFilters', this.filters, rule);
+				    var $filterSelect = $(this.getRuleFilterSelect(rule, filters));
+				
+				    rule.$el.find(/*QueryBuilder.selectors.filter_container*/'.rule-filter-container').html($filterSelect);
+				    if (! noevent ) 
+				    	this.trigger('afterCreateRuleFilters', rule);
+				
+				    this.applyRuleFlags(rule);
+				}
 			});
 
 			function cleanUnusedRules(rules) {
