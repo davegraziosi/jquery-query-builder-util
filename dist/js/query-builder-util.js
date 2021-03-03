@@ -847,8 +847,16 @@
 							operator.removeAttr("disabled");
 							inputvalues.removeAttr("disabled");
 							selectvalues.removeAttr("disabled");
-							if(localOptions.toggle.hide.values && prule.operator && prule.operator.nb_inputs > 0)
+							if(localOptions.toggle.hide.values && prule.operator && prule.operator.nb_inputs > 0) {
 								valueContainer.show();
+								/*Issue #51: focus su input text del filtro selezionato*/
+								if(inputvalues && inputvalues.length>0){
+									var inputVisibles = inputvalues.filter(":visible");
+									if(inputVisibles && inputVisibles.length>0)
+										inputVisibles[0].focus();
+								}
+								/*Issue #51:end*/
+							}
 							if(localOptions.toggle.hide.operator)
 								operatorContainer.show();
 						} else {
