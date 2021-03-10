@@ -1,6 +1,6 @@
 {
   "name": "jquery-query-builder-util",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "authors": [
     {
       "name": "Davide Graziosi",
@@ -10,6 +10,10 @@
     {
       "name": "Luigi Parlati",
       "email": "luigi.parlati@exprivia.com"
+    },
+    {  
+       "name"; "Stefano Catena",
+        "email": "stefano.catena@exprivia.com"
     }
   ],
   "description": "jQuery QueryBuilder utility package",

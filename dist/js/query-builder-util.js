@@ -1,3 +1,9 @@
+/*****
+ * SC1: 2021/03/08
+ *   Focus on rule filter input field for 'string' values.
+ * SC2: 2021/03/08
+ *   'contains' as default operator.
+*/
 (function (root, factory) {
 	if (typeof define == 'function' && define.amd) {
 		define(['jquery', 'angular'], factory);
@@ -626,6 +632,29 @@
 					widgetPositioning: {'vertical': 'bottom', 'horizontal': 'auto'},
 					debug: true
 				});
+				
+				// SC1: Section added for set focus on filter field input.
+				var inputvalues = rule.$el.find('.rule-value-container > input ');
+
+				if (inputvalues && inputvalues.length>0) {
+					
+					var inputVisibles = inputvalues.filter(":visible");
+					
+					if(inputVisibles && inputVisibles.length>0) {
+					
+					    var vAttributes=inputVisibles[0].attributes;
+					    
+					    if (vAttributes.type) {
+						    if (vAttributes.type.nodeType) {
+						      if (vAttributes.type.nodeValue == "text") {
+						      
+								inputVisibles[0].focus();
+							  }
+							}
+					    }
+					}
+				}
+				// end SC1
 
 				// $(".toggleswitch").bootstrapToggle({size: "mini"});
 				//$(event.target).find('.rule-operator-container select').trigger('change');
@@ -849,6 +878,7 @@
 							selectvalues.removeAttr("disabled");
 							if(localOptions.toggle.hide.values && prule.operator && prule.operator.nb_inputs > 0) {
 								valueContainer.show();
+								
 								/*Issue #51: focus su input text del filtro selezionato*/
 								if(inputvalues && inputvalues.length>0){
 									var inputVisibles = inputvalues.filter(":visible");
@@ -1270,6 +1300,12 @@
 						filter['valueGetter'] = valueGetter;
 						filter['input'] = "text";
 					}
+					// SC2: setting "contains" as operator.
+					if (type == "string") {
+						
+						filter['default_operator']='contains';
+					}
+					// SC2 end.
 				}
 
 				if (type === "date") {
