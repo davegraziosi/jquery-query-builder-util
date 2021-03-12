@@ -643,15 +643,8 @@
 					if(inputVisibles && inputVisibles.length>0) {
 					
 					    var vAttributes=inputVisibles[0].attributes;
-					    
-					    if (vAttributes.type) {
-						    if (vAttributes.type.nodeType) {
-						      if (vAttributes.type.nodeValue == "text") {
-						      
-								inputVisibles[0].focus();
-							  }
-							}
-					    }
+ 
+						inputVisibles[0].focus();
 					}
 				}
 				// end SC1
