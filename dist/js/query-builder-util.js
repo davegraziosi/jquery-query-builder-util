@@ -642,9 +642,10 @@
 					
 					if(inputVisibles && inputVisibles.length>0) {
 					
-					    var vAttributes=inputVisibles[0].attributes;
- 
-						inputVisibles[0].focus();
+					    //var vAttributes=inputVisibles[0].attributes;
+						//alert("Type:"+rule.filter.type);
+						if (rule.filter && rule.filter.type && rule.filter.type != 'datetime')
+							inputVisibles[0].focus();
 					}
 				}
 				// end SC1
@@ -871,12 +872,12 @@
 							selectvalues.removeAttr("disabled");
 							if(localOptions.toggle.hide.values && prule.operator && prule.operator.nb_inputs > 0) {
 								valueContainer.show();
-								
 								/*Issue #51: focus su input text del filtro selezionato*/
 								if(inputvalues && inputvalues.length>0){
 									var inputVisibles = inputvalues.filter(":visible");
 									if(inputVisibles && inputVisibles.length>0)
-										inputVisibles[0].focus();
+										if (rule.filter && rule.filter.type && rule.filter.type != 'datetime')
+											inputVisibles[0].focus();
 								}
 								/*Issue #51:end*/
 							}
