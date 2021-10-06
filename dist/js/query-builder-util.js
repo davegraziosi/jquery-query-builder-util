@@ -51,6 +51,7 @@
 			getQueryBuilderFilters: getQueryBuilderFilters,
 			getQueryBuilderOperators: getQueryBuilderOperators,
 			getSqlOperators: getSqlOperators,
+//			getMongoOperators: getMongoOperators, //per ora non aggiungiamo gli operatori custom
 			createQueryBuilder: createQueryBuilder,
 			defaultOptions: {
 				labels: { visible: true, readonly: true },
@@ -74,6 +75,25 @@
 		function init() {
 			var QueryBuilder = $.fn.queryBuilder;
 			QueryBuilder.extend({
+				getCustomMongo: function (rules) {
+
+					var result = {};
+
+					if (!rules) {
+						rules = this.getRules({ allow_invalid: true });
+					}
+
+					rules.rules = cleanUnusedRules(rules.rules);
+
+					if (rules.rules.length > 0) {
+						result = this.getMongo(rules);
+						//result.sql = "(" + result.sql + ")";
+					}
+
+					
+					return result;
+				
+				},
 				getCustomSQL: function (rules) {
 					var result = { sql: '(1=1)' };
 
@@ -341,6 +361,7 @@
 				filters: filters, lang_code: lang_code, display_errors: true
 				, operators: service.getQueryBuilderOperators()
 				, sqlOperators: service.getSqlOperators()
+				//, mongoOperators: service.getMongoOperators()
 				, plugins: plugins
 				, allow_empty: true
 				, saveNativeRules: true
@@ -1040,6 +1061,71 @@
 			return decodes[key];
 		}
 
+		// la funzione e' identica a quella della libreria di base... per ora questa non la usiamo
+		function getMongoOperators() {
+			return {
+		        // @formatter:off
+		        equal:            function(v) { return v[0]; },
+		        not_equal:        function(v) { return "{ \"$ne\": "+v[0]+" }"; },
+		        in:               function(v) { return "{ \"$in\": "+v + "}"; },
+		        not_in:           function(v) { return { '$nin': v }; },
+		        less:             function(v) { return { '$lt': v[0] }; },
+		        less_or_equal:    function(v) { return { '$lte': v[0] }; },
+		        greater:          function(v) { return { '$gt': v[0] }; },
+		        greater_or_equal: function(v) { return { '$gte': v[0] }; },
+		        between:          function(v) { return { '$gte': v[0], '$lte': v[1] }; },
+		        not_between:      function(v) { return { '$lt': v[0], '$gt': v[1] }; },
+		        begins_with:      function(v) { return { '$regex': '^' + Utils.escapeRegExp(v[0]) }; },
+		        not_begins_with:  function(v) { return { '$regex': '^(?!' + Utils.escapeRegExp(v[0]) + ')' }; },
+		        contains:         function(v) { return { '$regex': Utils.escapeRegExp(v[0]) }; },
+		        not_contains:     function(v) { return { '$regex': '^((?!' + Utils.escapeRegExp(v[0]) + ').)*$', '$options': 's' }; },
+		        ends_with:        function(v) { return { '$regex': Utils.escapeRegExp(v[0]) + '$' }; },
+		        not_ends_with:    function(v) { return { '$regex': '(?<!' + Utils.escapeRegExp(v[0]) + ')$' }; },
+		        is_empty:         function(v) { return ''; },
+		        is_not_empty:     function(v) { return { '$ne': '' }; },
+		        is_null:          function(v) { return null; },
+		        is_not_null:      function(v) { return { '$ne': null }; },
+		        // @formatter:on
+		        /*
+		        last_n_minutes: function(v) {
+		        		var d = "new Date(ISODate().getTime() - 1000 * 60 * "+v[0]+")";
+		        		return  "{\"$gt\": "+d+"}"; 
+		        },
+		        */
+		        /*
+				period: {
+					op: 'BETWEEN ?', sep: ' AND ',
+					sqlFn: function (values) {
+						var subOp = values[0];
+						switch (subOp) {
+							case 'days':
+								return "BETWEEN (TRUNC(SYSDATE) - INTERVAL '" + values[1] + "' day) AND TRUNC(SYSDATE)";
+							case 'day':
+								return 'BETWEEN SYSDATE - 1 AND SYSDATE';
+							case 'week':
+								return "BETWEEN TRUNC(SYSDATE,'IW') AND TRUNC(SYSDATE,'IW')+7-1/86400";
+							case 'month':
+								return "BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1),'MM') AND (TRUNC(SYSDATE,'MM')-1/86400)";
+						}
+					}
+				},
+				before_last_n_minutes: {
+					op: '< ?',
+					sqlFn: function (value) {
+						return "< (SYSDATE - INTERVAL '" + value + "' minute)";
+					}
+				},
+				before_last_n_days: {
+					op: '< ?',
+					sqlFn: function (value) {
+						return "< (SYSDATE - INTERVAL '" + value + "' day)";
+					}
+				},
+				*/
+		        is:               function(v) { return { '$in': v }; }
+			}
+		}
+		
 		function getSqlOperators() {
 			return {
 				equal: { op: '= ?' },
