@@ -359,7 +359,7 @@
 			};
 			var localOptions = angular.merge({
 				filters: filters, lang_code: lang_code, display_errors: true
-				, operators: service.getQueryBuilderOperators()
+				, operators: service.getQueryBuilderOperators(options)
 				, sqlOperators: service.getSqlOperators()
 				//, mongoOperators: service.getMongoOperators()
 				, plugins: plugins
@@ -1202,8 +1202,9 @@
 			};
 		}
 
-		function getQueryBuilderOperators() {
-			return [
+		function getQueryBuilderOperators(options) {
+			var useMongo = options && options.useMongo;
+			var ops = [
 				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
 				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
 				{ type: 'in',                    nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
@@ -1223,13 +1224,20 @@
 				{ type: 'is_empty',              nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
 				{ type: 'is_not_empty',          nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
 				{ type: 'is_null',               nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
-				{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
-				{ type: 'last_n_minutes',        nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
-				{ type: 'before_last_n_minutes', nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
-				{ type: 'before_last_n_days',    nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
-				{ type: 'period',                nb_inputs: 1, multiple: true,                                          apply_to: ['datetime'] },
-				{ type: 'is',                    nb_inputs: 1, multiple: false,                                         apply_to: [] }
-			];                      
+				{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] }];
+			if (!useMongo) {
+				var sqlExtra = [
+					{ type: 'last_n_minutes',        nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
+					{ type: 'before_last_n_minutes', nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
+					{ type: 'before_last_n_days',    nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
+					{ type: 'period',                nb_inputs: 1, multiple: true,                                          apply_to: ['datetime'] },
+					{ type: 'is',                    nb_inputs: 1, multiple: false,                                         apply_to: [] }
+				];          
+				sqlExtra.forEach(function (s) {
+					ops.push(s);
+				});
+			} 
+			return ops;
 		}
 
 		function getQueryBuilderFilters(items, lang_code) {
