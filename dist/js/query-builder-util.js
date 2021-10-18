@@ -1203,7 +1203,7 @@
 		}
 
 		function getQueryBuilderOperators(options) {
-			var useMongo = options && options.useMongo;
+			var skipExtraOperators = options && options.skipExtraOperators;
 			var ops = [
 				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
 				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
@@ -1225,7 +1225,7 @@
 				{ type: 'is_not_empty',          nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
 				{ type: 'is_null',               nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
 				{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] }];
-			if (!useMongo) {
+			if (!skipExtraOperators) {
 				var sqlExtra = [
 					{ type: 'last_n_minutes',        nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
 					{ type: 'before_last_n_minutes', nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
