@@ -77,7 +77,7 @@
 			QueryBuilder.extend({
 				getCustomMongo: function (rules) {
 
-					var result = {};
+					var result = '{}';
 
 					if (!rules) {
 						rules = this.getRules({ allow_invalid: true });
