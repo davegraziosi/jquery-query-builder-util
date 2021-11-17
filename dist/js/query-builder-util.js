@@ -1205,8 +1205,10 @@
 		function getQueryBuilderOperators(options) {
 			var skipExtraOperators = options && options.skipExtraOperators;
 			var ops = [
-				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
-				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
+				{ type: 'equal_ic',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['number', 'datetime', 'boolean'] },
+				{ type: 'not_equal_ic',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['number', 'datetime', 'boolean'] },
 				{ type: 'in',                    nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
 				{ type: 'not_in',                nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
 				{ type: 'less',                  nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
