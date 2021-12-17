@@ -51,7 +51,7 @@
 			getQueryBuilderFilters: getQueryBuilderFilters,
 			getQueryBuilderOperators: getQueryBuilderOperators,
 			getSqlOperators: getSqlOperators,
-//			getMongoOperators: getMongoOperators, //per ora non aggiungiamo gli operatori custom
+			getMongoOperators: getMongoOperators, //per ora non aggiungiamo gli operatori custom
 			createQueryBuilder: createQueryBuilder,
 			defaultOptions: {
 				labels: { visible: true, readonly: true },
@@ -361,7 +361,7 @@
 				filters: filters, lang_code: lang_code, display_errors: true
 				, operators: service.getQueryBuilderOperators(options)
 				, sqlOperators: service.getSqlOperators()
-				//, mongoOperators: service.getMongoOperators()
+				, mongoOperators: service.getMongoOperators()
 				, plugins: plugins
 				, allow_empty: true
 				, saveNativeRules: true
@@ -1064,65 +1064,53 @@
 		// la funzione e' identica a quella della libreria di base... per ora questa non la usiamo
 		function getMongoOperators() {
 			return {
-		        // @formatter:off
-		        equal:            function(v) { return v[0]; },
-		        not_equal:        function(v) { return "{ \"$ne\": "+v[0]+" }"; },
-		        in:               function(v) { return "{ \"$in\": "+v + "}"; },
-		        not_in:           function(v) { return { '$nin': v }; },
-		        less:             function(v) { return { '$lt': v[0] }; },
-		        less_or_equal:    function(v) { return { '$lte': v[0] }; },
-		        greater:          function(v) { return { '$gt': v[0] }; },
-		        greater_or_equal: function(v) { return { '$gte': v[0] }; },
-		        between:          function(v) { return { '$gte': v[0], '$lte': v[1] }; },
-		        not_between:      function(v) { return { '$lt': v[0], '$gt': v[1] }; },
-		        begins_with:      function(v) { return { '$regex': '^' + Utils.escapeRegExp(v[0]) }; },
-		        not_begins_with:  function(v) { return { '$regex': '^(?!' + Utils.escapeRegExp(v[0]) + ')' }; },
-		        contains:         function(v) { return { '$regex': Utils.escapeRegExp(v[0]) }; },
-		        not_contains:     function(v) { return { '$regex': '^((?!' + Utils.escapeRegExp(v[0]) + ').)*$', '$options': 's' }; },
-		        ends_with:        function(v) { return { '$regex': Utils.escapeRegExp(v[0]) + '$' }; },
-		        not_ends_with:    function(v) { return { '$regex': '(?<!' + Utils.escapeRegExp(v[0]) + ')$' }; },
-		        is_empty:         function(v) { return ''; },
-		        is_not_empty:     function(v) { return { '$ne': '' }; },
-		        is_null:          function(v) { return null; },
-		        is_not_null:      function(v) { return { '$ne': null }; },
-		        // @formatter:on
-		        /*
-		        last_n_minutes: function(v) {
-		        		var d = "new Date(ISODate().getTime() - 1000 * 60 * "+v[0]+")";
-		        		return  "{\"$gt\": "+d+"}"; 
-		        },
-		        */
-		        /*
-				period: {
-					op: 'BETWEEN ?', sep: ' AND ',
-					sqlFn: function (values) {
-						var subOp = values[0];
-						switch (subOp) {
-							case 'days':
-								return "BETWEEN (TRUNC(SYSDATE) - INTERVAL '" + values[1] + "' day) AND TRUNC(SYSDATE)";
-							case 'day':
-								return 'BETWEEN SYSDATE - 1 AND SYSDATE';
-							case 'week':
-								return "BETWEEN TRUNC(SYSDATE,'IW') AND TRUNC(SYSDATE,'IW')+7-1/86400";
-							case 'month':
-								return "BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1),'MM') AND (TRUNC(SYSDATE,'MM')-1/86400)";
+				 // @formatter:off
+		    	equal: { op: '?' },  //ENABLE_IC
+				equal_ic: { op:  '{ $regex: ? , $options: \'<IC>\' }', mod: '^{0}$', ic:1 },
+				//equal_ic: { op:  '{ $regex: ? , $options: \'i\' }', mod: '^{0}$' , ic: 1},
+		    	not_equal:   {op :  '{$ne : ?}' },  //ENABLE_IC
+				not_equal_ic: { op:  '{$not: { $regex: ? , $options: \'<IC>\' }}', mod: '^{0}$', ic:1 },
+				
+		    	in:    { op:  '{$in :  [ ? ]}', sep: ',' , inmod: '/^{0}$/<IC>',  ic:1},  //ENABLE_IC
+		    	not_in:    { op:  '{$nin :  [ ? ]}', sep: ',', inmod: '/^{0}$/<IC>',  ic:1},  //ENABLE_IC
+				
+		    	less:    { op:  '{$lt :  ?}' },
+		    	less_or_equal:    { op:  '{$lte :  ?}' },
+		    	greater:    { op:  '{$gt :  ?}' },
+		    	greater_or_equal:    { op:  '{$gte :  ?}' },
+		    	between:  { op:  '{$gte :  ? }' , sep: ', $lte: ' },
+		        not_between:  { op:  '{ $not: {$gte : ? }}' , sep: ', $lte: ' },
+		    	begins_with:   { op:  '{ $regex: ? , $options: \'<IC>\'}', mod: '^{0}' , ic:1},   //ENABLE_IC
+		    	not_begins_with:   { op:  '{ $regex: ? , $options: \'<IC>\'}', mod: '^(?!{0})' , ic:1},   //ENABLE_IC
+		    	contains:   { op:  '{ $regex: ? , $options: \'<IC>\'}'  , ic:1},  //ENABLE_IC
+		    	not_contains:   { op:  '{ $regex: ? , $options: \'<IC>s\' }', mod: '^((?!{0}).)*$' , ic:1},  //ENABLE_IC
+		    	ends_with:      { op:  '{ $regex: ? , $options: \'<IC>\' }', mod: '{0}$' , ic:1},  //ENABLE_IC
+		        not_ends_with:   { op:  '{ $regex: ? $options: \'<IC>\' }', mod: '(?<!{0})$' , ic:1},  //ENABLE_IC
+		        is_empty: { op : '\'\''},
+		        is_not_empty:   { op : '{ $ne : \'\'}'},
+		        is_null:    { op : 'null'},
+		        is_not_null:  { op : '{ $ne : null}'},
+			last_n_minutes: {mdbFn: function (values) {return  '{ $gt:  new Date(ISODate().getTime() - (1000 * 60 * '+ values + '))}' }},
+		        before_last_n_minutes: { mdbFn: function (values) {return  '{$lt: new Date(ISODate().getTime() - (1000 * 60 *  '+ values + '))}' }},
+		        before_last_n_days: {mdbFn: function (values) {return  '{$lt: new Date(ISODate().getTime() - (1000 * 60 * 60 * 24 * '+ values + '))}'}},
+				period: {op: '{$gte :  ? }' , sep: ', $lte: ',
+							mdbFn: function (values) {
+								var subOp = values[0];
+								switch (subOp) {
+									case 'days':
+										return '{$lt: new Date(ISODate().getTime() - (1000 * 60 * 60 * 24 * '+values[1]+'))}';
+									case 'day':
+										return '{$gt: new Date(Date.now() - 24*60*60 * 1000)}';
+									case 'week':
+										return "{ $gte: moment().startOf('week').day(-7).toDate(), $lt: moment().startOf('week').toDate() }";
+										//return "BETWEEN TRUNC(SYSDATE,'IW') AND TRUNC(SYSDATE,'IW')+7-1/86400";
+									case 'month':
+										return "{ $gte: moment().subtract(1, 'months').startOf('month').toDate(), $lt: moment().date(0).toDate() }"; 
+										//return "BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1),'MM') AND (TRUNC(SYSDATE,'MM')-1/86400)";
+								}
+							}
 						}
-					}
-				},
-				before_last_n_minutes: {
-					op: '< ?',
-					sqlFn: function (value) {
-						return "< (SYSDATE - INTERVAL '" + value + "' minute)";
-					}
-				},
-				before_last_n_days: {
-					op: '< ?',
-					sqlFn: function (value) {
-						return "< (SYSDATE - INTERVAL '" + value + "' day)";
-					}
-				},
-				*/
-		        is:               function(v) { return { '$in': v }; }
+		        // @formatter:on
 			}
 		}
 		
@@ -1204,13 +1192,10 @@
 
 		function getQueryBuilderOperators(options) {
 			var skipExtraOperators = options && options.skipExtraOperators;
-			var ops = [];
-			if (options.enable_ic) 
-			ops =[
-				{ type: 'equal_ic',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
-				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['number', 'datetime', 'boolean'] },
-				{ type: 'not_equal_ic',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
-				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['number', 'datetime', 'boolean'] },
+			/*
+			return [
+				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
+				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
 				{ type: 'in',                    nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
 				{ type: 'not_in',                nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
 				{ type: 'less',                  nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
@@ -1228,30 +1213,35 @@
 				{ type: 'is_empty',              nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
 				{ type: 'is_not_empty',          nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
 				{ type: 'is_null',               nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
-				{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] }];
-			else 
-				ops =[
-					{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string','number', 'datetime', 'boolean'] },
-					{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string','number', 'datetime', 'boolean'] },
-					{ type: 'in',                    nb_inputs: 1, multiple: true,  enable_ic: false,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
-					{ type: 'not_in',                nb_inputs: 1, multiple: true,  enable_ic: false,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
-					{ type: 'less',                  nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
-					{ type: 'less_or_equal',         nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
-					{ type: 'greater',               nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
-					{ type: 'greater_or_equal',      nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
-					{ type: 'between',               nb_inputs: 2, multiple: false,                                         apply_to: ['number', 'datetime'] },
-					{ type: 'not_between',           nb_inputs: 2, multiple: false,                                         apply_to: ['number', 'datetime'] },
-					{ type: 'begins_with',           nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string'] },
-					{ type: 'not_begins_with',       nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string'] },
-					{ type: 'contains',              nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string'] },
-					{ type: 'not_contains',          nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string'] },
-					{ type: 'ends_with',             nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string'] },
-					{ type: 'not_ends_with',         nb_inputs: 1, multiple: false, enable_ic: false,                        apply_to: ['string'] },
-					{ type: 'is_empty',              nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
-					{ type: 'is_not_empty',          nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
-					{ type: 'is_null',               nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
-					{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] }];
-					
+				{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
+				{ type: 'last_n_minutes',        nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
+				{ type: 'before_last_n_minutes', nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
+				{ type: 'before_last_n_days',    nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
+				{ type: 'period',                nb_inputs: 1, multiple: true,                                          apply_to: ['datetime'] },
+				{ type: 'is',                    nb_inputs: 1, multiple: false,                                         apply_to: [] }
+			]; */
+			var ops =[
+				{ type: 'equal',                 nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
+				{ type: 'not_equal',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string', 'number', 'datetime', 'boolean'] },
+				{ type: 'in',                    nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
+				{ type: 'not_in',                nb_inputs: 1, multiple: true,  enable_ic: true,  show_separator: true, apply_to: ['string', 'number', 'datetime'] },
+				{ type: 'less',                  nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
+				{ type: 'less_or_equal',         nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
+				{ type: 'greater',               nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
+				{ type: 'greater_or_equal',      nb_inputs: 1, multiple: false,                                         apply_to: ['number', 'datetime'] },
+				{ type: 'between',               nb_inputs: 2, multiple: false,                                         apply_to: ['number', 'datetime'] },
+				{ type: 'not_between',           nb_inputs: 2, multiple: false,                                         apply_to: ['number', 'datetime'] },
+				{ type: 'begins_with',           nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'not_begins_with',       nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'contains',              nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'not_contains',          nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'ends_with',             nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'not_ends_with',         nb_inputs: 1, multiple: false, enable_ic: true,                        apply_to: ['string'] },
+				{ type: 'is_empty',              nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
+				{ type: 'is_not_empty',          nb_inputs: 0, multiple: false,                                         apply_to: ['string'] },
+				{ type: 'is_null',               nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
+				{ type: 'is_not_null',           nb_inputs: 0, multiple: false,                                         apply_to: ['string', 'number', 'datetime', 'boolean'] },
+			];			
 			if (!skipExtraOperators) {
 				var sqlExtra = [
 					{ type: 'last_n_minutes',        nb_inputs: 1, multiple: false,                                         apply_to: ['datetime'] },
