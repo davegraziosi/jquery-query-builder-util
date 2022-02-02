@@ -1090,17 +1090,19 @@
 		        is_not_empty:   { op : '{ $ne : \'\'}'},
 		        is_null:    { op : 'null'},
 		        is_not_null:  { op : '{ $ne : null}'},
-			last_n_minutes: {mdbFn: function (values) {return  '{ $gt:  new Date(ISODate().getTime() - (1000 * 60 * '+ values + '))}' }},
-		        before_last_n_minutes: { mdbFn: function (values) {return  '{$lt: new Date(ISODate().getTime() - (1000 * 60 *  '+ values + '))}' }},
-		        before_last_n_days: {mdbFn: function (values) {return  '{$lt: new Date(ISODate().getTime() - (1000 * 60 * 60 * 24 * '+ values + '))}'}},
+			    last_n_minutes: {mdbFn: function (values) {return '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * values)+' ]}}';}},
+		        before_last_n_minutes: { mdbFn: function (values) {return '{$lt: { $subtract : [new Date(),  '+(1000 * 60 * values)+' ]}}';}},
+		        before_last_n_days: {mdbFn: function (values) {return '{$lt: { $subtract : [new Date(),  '+(1000 * 60 *60*24* values)+' ]}}';}},
 				period: {op: '{$gte :  ? }' , sep: ', $lte: ',
-							mdbFn: function (values) {
+							/*mdbFn: function (values) {
 								var subOp = values[0];
 								switch (subOp) {
 									case 'days':
-										return '{$lt: new Date(ISODate().getTime() - (1000 * 60 * 60 * 24 * '+values[1]+'))}';
+										
+										return '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * 60 * 24 *values[1])+' ]}}';
 									case 'day':
-										return '{$gt: new Date(Date.now() - 24*60*60 * 1000)}';
+										
+										return '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * 60 * 24)+' ]}}';
 									case 'week':
 										return "{ $gte: moment().startOf('week').day(-7).toDate(), $lt: moment().startOf('week').toDate() }";
 										//return "BETWEEN TRUNC(SYSDATE,'IW') AND TRUNC(SYSDATE,'IW')+7-1/86400";
@@ -1108,7 +1110,31 @@
 										return "{ $gte: moment().subtract(1, 'months').startOf('month').toDate(), $lt: moment().date(0).toDate() }"; 
 										//return "BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1),'MM') AND (TRUNC(SYSDATE,'MM')-1/86400)";
 								}
-							}
+							},
+							*/
+		        			mdbFullFn: function (field, rule_value, values) {
+		        				var subOp = values[0];
+		        				
+								switch (subOp) {
+									case 'days':
+										return '{ \''+ field + '\' : ' +  '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * 60 * 24 *values[1])+' ]}}'+'}';
+									case 'day':
+										return '{ \''+ field + '\' : ' + '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * 60 * 24)+' ]}}'+'}';
+									case 'week':
+										return 	'{$and: [{$expr: {$gt: [\'$'+field+'\', {$subtract: [{$dateFromParts: {\'isoWeekYear\': { $isoWeekYear: new Date() },\'isoWeek\': { $isoWeek: new Date() },\'isoDayOfWeek\': 1 ,\'timezone\':\'Europe/Rome\'}},'+
+										        7* 1000 * 60 * 60 * 24 +']}]}}, '+
+										    '{$expr: {$lt: [\'$'+field+'\',  {$dateFromParts: {\'isoWeekYear\': { $isoWeekYear: new Date() },\'isoWeek\': { $isoWeek: new Date() },\'isoDayOfWeek\': 1 ,\'timezone\': \'Europe/Rome\'}} ] }}]}';
+										//return "{ $gte: moment().startOf('week').day(-7).toDate(), $lt: moment().startOf('week').toDate() }";
+										//return "BETWEEN TRUNC(SYSDATE,'IW') AND TRUNC(SYSDATE,'IW')+7-1/86400";
+									case 'month':
+									   return '{$and: [{$expr: {$gt: [\'$'+field+'\',{$dateFromParts: {\'year\': {$year : new Date()}, \'month\': {$subtract: [{$month : new Date()}, 1]},\'timezone\': \'Europe/Rome\'}}  ]}},' +
+									   							'{$expr: {$lt: [\'$'+field+'\',  {$dateFromParts: {\'year\': {$year : new Date()},\'month\': {$month : new Date()},\'timezone\': \'Europe/Rome\'}} ] }} ]}';
+										//return "{ $gte: moment().subtract(1, 'months').startOf('month').toDate(), $lt: moment().date(0).toDate() }"; 
+										//return "BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1),'MM') AND (TRUNC(SYSDATE,'MM')-1/86400)";
+								}
+		        			}
+		        
+									        
 						}
 		        // @formatter:on
 			}
