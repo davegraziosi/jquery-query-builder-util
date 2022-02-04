@@ -1090,9 +1090,24 @@
 		        is_not_empty:   { op : '{ $ne : \'\'}'},
 		        is_null:    { op : 'null'},
 		        is_not_null:  { op : '{ $ne : null}'},
-			    last_n_minutes: {mdbFn: function (values) {return '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * values)+' ]}}';}},
-		        before_last_n_minutes: { mdbFn: function (values) {return '{$lt: { $subtract : [new Date(),  '+(1000 * 60 * values)+' ]}}';}},
-		        before_last_n_days: {mdbFn: function (values) {return '{$lt: { $subtract : [new Date(),  '+(1000 * 60 *60*24* values)+' ]}}';}},
+			    last_n_minutes: {
+			    	//mdbFn: function (values) {return '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * values)+' ]}}';},
+		            mdbFullFn: function (field, rule_value, values) {
+		        		return '{$expr: {$gt: [\'$'+field+'\', {$subtract: [new Date(),  '+(1000 * 60 * values)+' ]} ]}}';
+		        	}
+			    },
+		        before_last_n_minutes: { 
+					//mdbFn: function (values) {return '{$lt: { $subtract : [new Date(),  '+(1000 * 60 * values)+' ]}}';}
+					mdbFullFn: function (field, rule_value, values) {
+		        		return '{$expr: {$lt: [\'$'+field+'\', {$subtract: [new Date(),  '+(1000 * 60 * values)+' ]} ]}}';
+		        	}
+				},
+		        before_last_n_days: {
+					//mdbFn: function (values) {return '{$lt: { $subtract : [new Date(),  '+(1000 * 60 *60*24* values)+' ]}}';}
+					mdbFullFn: function (field, rule_value, values) {
+		        		return '{$expr: {$lt: [\'$'+field+'\', {$subtract: [new Date(),  '+(1000 * 60 *60*24* values)+' ]} ]}}';
+		        	}
+				},
 				period: {op: '{$gte :  ? }' , sep: ', $lte: ',
 							/*mdbFn: function (values) {
 								var subOp = values[0];
@@ -1117,9 +1132,9 @@
 		        				
 								switch (subOp) {
 									case 'days':
-										return '{ \''+ field + '\' : ' +  '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * 60 * 24 *values[1])+' ]}}'+'}';
+										return '{$expr: {$gt: [\'$'+field+'\', {$subtract: [new Date(),  '+(1000 * 60 * 60 * 24 *values[1])+' ]} ]}}'; 
 									case 'day':
-										return '{ \''+ field + '\' : ' + '{$gt: { $subtract : [new Date(),  '+(1000 * 60 * 60 * 24)+' ]}}'+'}';
+										return '{$expr: {$gt: [\'$'+field+'\', {$subtract: [new Date(),  '+(1000 * 60 * 60 * 24)+' ]} ]}}'; 
 									case 'week':
 										return 	'{$and: [{$expr: {$gt: [\'$'+field+'\', {$subtract: [{$dateFromParts: {\'isoWeekYear\': { $isoWeekYear: new Date() },\'isoWeek\': { $isoWeek: new Date() },\'isoDayOfWeek\': 1 ,\'timezone\':\'Europe/Rome\'}},'+
 										        7* 1000 * 60 * 60 * 24 +']}]}}, '+
