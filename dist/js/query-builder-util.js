@@ -1072,9 +1072,11 @@
 				not_equal_ic: { op:  '{$not: { $regex: ? , $options: \'<IC>\' }}', mod: '^{0}$', ic:1 },
 				
 		    	in:    { op:  '{$in :  [ ? ]}', sep: ','},
-			in_ic:    { op:  '{$in :  [ ? ]}', sep: ',' , inmod: '/^{0}$/<IC>',  ic:1},  //ENABLE_IC
+			//in_ic:    { op:  '{$in :  [ ? ]}', sep: ',' , inmod: '/^{0}$/<IC>',  ic:1},  //ENABLE_IC
+			in_ic:    { op:  '{$regex :  \'?\' , $options: \'<IC>\' }', sep: '|' , inmod: '^{0}$',  ic:1},  //ENABLE_IC
 		    	not_in:    { op:  '{$nin :  [ ? ]}', sep: ','},
-		    	not_in_ic:    { op:  '{$nin :  [ ? ]}', sep: ',', inmod: '/^{0}$/<IC>',  ic:1},  //ENABLE_IC
+		    	//not_in_ic:    { op:  '{$nin :  [ ? ]}', sep: ',', inmod: '/^{0}$/<IC>',  ic:1},  //ENABLE_IC
+		    	not_in_ic: { op:  '{$not: {$regex :  \'?\' , $options: \'<IC>\' }}', sep: '|' , inmod: '^{0}$',  ic:1},  //ENABLE_IC
 				
 		    	less:    { op:  '{$lt :  ?}' },
 		    	less_or_equal:    { op:  '{$lte :  ?}' },
